@@ -1,20 +1,42 @@
 pipeline {
     agent any
+
+    tools {
+        nodejs 'NodeJS'   // Make sure NodeJS is configured in Jenkins Global Tools
+    }
+
     stages {
-        stage('Checkout') {
+
+        stage('Checkout Code') {
             steps {
-                git 'https://github.com/ramya-harshinivs26/devops-main-project.git'
+                git branch: 'main',
+                    url: 'https://github.com/ramya-harshinivs26/devops-main-project.git'
             }
         }
+
         stage('Install Dependencies') {
             steps {
-                bat 'npm install'
+                dir('devops-app') {
+                    bat 'npm install'
+                }
             }
         }
-        stage('Run App') {
+
+        stage('Run Application') {
             steps {
-                bat 'node index.js'
+                dir('devops-app') {
+                    bat 'npm start'
+                }
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Pipeline executed successfully!'
+        }
+        failure {
+            echo '❌ Pipeline failed. Check logs.'
         }
     }
 }
