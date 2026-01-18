@@ -1,42 +1,44 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'NodeJS'   // Make sure NodeJS is configured in Jenkins Global Tools
-    }
-
     stages {
-
         stage('Checkout Code') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/ramya-harshinivs26/devops-main-project.git'
+                git 'https://github.com/your-repo/devops-app.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                dir('devops-app') {
-                    bat 'npm install'
-                }
+                bat 'npm install'
             }
         }
 
-        stage('Run Application') {
+        stage('Run Tests') {
             steps {
-                dir('devops-app') {
-                    bat 'npm start'
-                }
+                bat 'npm test'
             }
         }
-    }
 
-    post {
-        success {
-            echo '✅ Pipeline executed successfully!'
+        stage('Build Docker Image') {
+            steps {
+                bat 'docker build -t ramyavs/docker-node-app:latest .'
+            }
         }
-        failure {
-            echo '❌ Pipeline failed. Check logs.'
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    bat '''
+                    docker login -u %DOCKER_USER% -p %DOCKER_PASS%
+                    docker push ramyavs/docker-node-app:latest
+                    '''
+                }
+            }
         }
     }
 }
