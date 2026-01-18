@@ -1,25 +1,24 @@
-node {
+pipeline {
+    agent any
 
-    def app
+    stages {
 
-    stage('Clone repository') {
-        checkout scm
-    }
-
-    stage('Build image') {
-        app = docker.build("ramyavs/docker-node-app")
-    }
-
-    stage('Test image') {
-        app.inside {
-            bat 'echo Tests passed'
+        stage('Checkout Code') {
+            steps {
+                git 'https://github.com/ramya-harshinivs26/devops-main-project.git'
+            }
         }
-    }
 
-    stage('Push image') {
-        docker.withRegistry('https://registry.hub.docker.com', 'git') {
-            app.push("${env.BUILD_NUMBER}")
-            app.push("latest")
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t ramyavs/docker-node-app:latest .'
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh 'docker push ramyavs/docker-node-app:latest'
+            }
         }
     }
 }
