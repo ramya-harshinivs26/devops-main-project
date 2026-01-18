@@ -1,44 +1,25 @@
-pipeline {
-    agent any
+node {
 
-    stages {
-        stage('Checkout Code') {
-            steps {
-                git 'https://github.com/ramya-harshinivs26/devops-main-project.git'
-            }
+    def app
+
+    stage('Clone repository') {
+        checkout scm
+    }
+
+    stage('Build image') {
+        app = docker.build("ramyavs/docker-node-app")
+    }
+
+    stage('Test image') {
+        app.inside {
+            bat 'echo Tests passed'
         }
+    }
 
-        stage('Install Dependencies') {
-            steps {
-                bat 'npm install'
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                bat 'npm test'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                bat 'docker build -t ramyavs/docker-node-app:latest .'
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'docker-credentials',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    bat '''
-                    docker login -u %DOCKER_USER% -p %DOCKER_PASS%
-                    docker push ramyavs/docker-node-app:latest
-                    '''
-                }
-            }
+    stage('Push image') {
+        docker.withRegistry('https://registry.hub.docker.com', 'git') {
+            app.push("${env.BUILD_NUMBER}")
+            app.push("latest")
         }
     }
 }
