@@ -2,24 +2,19 @@ pipeline {
     agent any
 
     stages {
-
-        stage('Checkout Code') {
+        stage('Test 1 - Basic') {
             steps {
-                checkout scm
+                echo 'Pipeline is finally running!'
+                echo "Current time: ${new Date()}"
             }
         }
 
-        stage('Test Docker Access') {
+        stage('Test 2 - Windows command') {
             steps {
-                bat 'docker version'
+                bat 'echo Hello from Windows'
+                bat 'ver'           // shows Windows version
+                bat 'docker version || echo Docker not working or not found'
             }
         }
-
-        stage('Build Docker Image') {
-            steps {
-                bat 'docker build -t ramyavs/devops-test:latest .'
-            }
-        }
-
     }
 }
