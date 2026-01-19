@@ -1,20 +1,49 @@
 pipeline {
     agent any
 
+    environment {
+        // Change these to match your Docker Hub username/repo
+        DOCKER_IMAGE = "ramyavs/docker-node-app"
+        DOCKER_TAG   = "${env.BUILD_NUMBER}"   // or use "latest" if you prefer
+    }
+
     stages {
-        stage('Test 1 - Basic') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Pipeline is finally running!'
-                echo "Current time: ${new Date()}"
+                // Build from the correct folder where your Dockerfile is
+                // Assuming Dockerfile is in devops-app/
+                bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -f ramyavs/docker-node-app"
+                
+                // Optional: also tag as latest
+                bat "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
             }
         }
 
-        stage('Test 2 - Windows command') {
+        stage('Login & Push to Docker Hub') {
             steps {
-                bat 'echo Hello from Windows'
-                bat 'ver'           // shows Windows version
-                bat 'docker version || echo Docker not working or not found'
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds', 
+                    usernameVariable: 'DOCKER_USER', 
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    bat '''
+                    echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                    docker push %DOCKER_IMAGE%:%DOCKER_TAG%
+                    docker push %DOCKER_IMAGE%:latest
+                    '''
+                }
             }
+        }
+    }
+
+    post {
+        always {
+            // Clean up login (good security practice)
+            bat 'docker logout || exit 0'
+            
+            // Optional: remove local images to save space
+            bat "docker rmi %DOCKER_IMAGE%:%DOCKER_TAG% || exit 0"
+            bat "docker rmi %DOCKER_IMAGE%:latest || exit 0"
         }
     }
 }
