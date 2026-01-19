@@ -1,46 +1,16 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = "ramyavs/docker-node-app"
-        TAG = "latest"
-    }
-
     stages {
-
-        stage('Checkout Code') {
+        stage('Check Docker') {
             steps {
-                checkout scm
+                bat 'docker --version'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build') {
             steps {
-                bat "docker build -t %IMAGE_NAME%:%TAG% ."
-            }
-        }
-
-        stage('Test Docker Image') {
-            steps {
-                bat "docker run --rm %IMAGE_NAME%:%TAG% node -v"
-            }
-        }
-
-        stage('Docker Login') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    bat "docker login -u %DOCKER_USER% -p %DOCKER_PASS%"
-                }
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                bat "docker push %IMAGE_NAME%:%TAG%"
+                bat 'docker build -t test-docker-build .'
             }
         }
     }
