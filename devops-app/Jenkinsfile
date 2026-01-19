@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_USER   = 'ramyavs'                  // your Docker Hub username
-        APP_NAME      = 'devops-node-app'          // change to your actual app name
+        APP_NAME      = 'docker-node-app'          // change to your actual app name
         IMAGE_NAME    = "${DOCKER_USER}/${APP_NAME}"
         IMAGE_TAG     = "${env.BUILD_NUMBER}"      // unique per build, or use 'latest'
     }
